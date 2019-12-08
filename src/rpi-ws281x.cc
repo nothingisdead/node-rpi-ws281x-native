@@ -40,7 +40,7 @@ void render(const Nan::FunctionCallbackInfo<v8::Value>& info) {
     return;
   }
 
-  Local<Object> buffer = info[0]->ToObject();
+  Local<Object> buffer = Nan::To<Object>(info[0]).ToLocalChecked();
 
   int numBytes = std::min((int)node::Buffer::Length(buffer),
       4 * ledstring.channel[0].count);
@@ -84,11 +84,11 @@ void init(const Nan::FunctionCallbackInfo<v8::Value>& info) {
     return Nan::ThrowTypeError("init(): argument 0 is not a number");
   }
 
-  ledstring.channel[0].count = info[0]->Int32Value();
+  ledstring.channel[0].count = Nan::To<int32_t>(info[0]).ToChecked();
 
   // second (optional) an Object
   if(info.Length() >= 2 && info[1]->IsObject()) {
-    Local<Object> config = info[1]->ToObject();
+    Local<Object> config = Nan::To<Object>(info[1]).ToLocalChecked();
 
     Local<String>
         symFreq = Nan::New<String>("frequency").ToLocalChecked(),
@@ -98,23 +98,23 @@ void init(const Nan::FunctionCallbackInfo<v8::Value>& info) {
         symBrightness = Nan::New<String>("brightness").ToLocalChecked();
 
     if(Nan::HasOwnProperty(config, symFreq).FromMaybe(false)) {
-      ledstring.freq = config->Get(symFreq)->Uint32Value();
+      ledstring.freq = Nan::To<uint32_t>(Nan::Get(config, symFreq).ToLocalChecked()).ToChecked();
     }
 
     if(Nan::HasOwnProperty(config, symDmaNum).FromMaybe(false)) {
-      ledstring.dmanum = config->Get(symDmaNum)->Int32Value();
+      ledstring.dmanum = Nan::To<int32_t>(Nan::Get(config, symDmaNum).ToLocalChecked()).ToChecked();
     }
 
     if(Nan::HasOwnProperty(config, symGpioPin).FromMaybe(false)) {
-      ledstring.channel[0].gpionum = config->Get(symGpioPin)->Int32Value();
+      ledstring.channel[0].gpionum = Nan::To<int32_t>(Nan::Get(config, symGpioPin).ToLocalChecked()).ToChecked();
     }
 
     if(Nan::HasOwnProperty(config, symInvert).FromMaybe(false)) {
-      ledstring.channel[0].invert = config->Get(symInvert)->Int32Value();
+      ledstring.channel[0].invert = Nan::To<int32_t>(Nan::Get(config, symInvert).ToLocalChecked()).ToChecked();
     }
 
     if(Nan::HasOwnProperty(config, symBrightness).FromMaybe(false)) {
-      ledstring.channel[0].brightness = config->Get(symBrightness)->Int32Value();
+      ledstring.channel[0].brightness = Nan::To<int32_t>(Nan::Get(config, symBrightness).ToLocalChecked()).ToChecked();
     }
   }
 
@@ -141,7 +141,7 @@ void setBrightness(const Nan::FunctionCallbackInfo<v8::Value>& info) {
     return Nan::ThrowTypeError("setBrightness(): argument 0 is not a number");
   }
 
-  ledstring.channel[0].brightness = info[0]->Int32Value();
+  ledstring.channel[0].brightness = Nan::To<int32_t>(info[0]).ToChecked();
 
   info.GetReturnValue().SetUndefined();
 }
@@ -165,11 +165,11 @@ void reset(const Nan::FunctionCallbackInfo<v8::Value>& info) {
 /**
  * initializes the module.
  */
-void initialize(Handle<Object> exports) {
-  NAN_EXPORT(exports, init);
-  NAN_EXPORT(exports, reset);
-  NAN_EXPORT(exports, render);
-  NAN_EXPORT(exports, setBrightness);
+NAN_MODULE_INIT(initialize) {
+  NAN_EXPORT(target, init);
+  NAN_EXPORT(target, reset);
+  NAN_EXPORT(target, render);
+  NAN_EXPORT(target, setBrightness);
 }
 
 NODE_MODULE(rpi_ws281x, initialize)
